@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English with Thành Nam - Coming Soon</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blur-intensity: 8px;
+            --saturation-intensity: 120%;
+            --glass-bg-color: rgba(255, 255, 255, 0.1);
+            --glass-border-color: rgba(255, 255, 255, 0.2);
+            --shadow-color: rgba(91, 33, 182, 0.1);
+            --primary-accent: #8b5cf6; /* Violet-500 */
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --app-bg: #f0f2f5;
+            --purple-text: #5b21b6; /* Màu tím đậm hơn cho chữ */
+        }
+
+        body {
+            background-color: var(--app-bg);
+            color: var(--text-primary);
+            font-family: 'Be Vietnam Pro', sans-serif;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            cursor: default;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Lớp nền: Các khối màu chuyển động */
+        .background-shapes { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .shape { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.5; }
+        .shape1 { width: 450px; height: 450px; background: #a855f7; top: -15%; left: -10%; animation: float 28s infinite alternate ease-in-out; }
+        .shape2 { width: 400px; height: 400px; background: #22d3ee; bottom: -20%; right: -15%; animation: float 32s infinite alternate ease-in-out; }
+        .shape3 { width: 350px; height: 350px; background: #facc15; top: 20%; right: 35%; animation: float 24s infinite alternate ease-in-out; }
+        
+        @keyframes float {
+            from { transform: translateY(20px) scale(1) rotate(0deg); }
+            to { transform: translateY(-20px) scale(1.05) rotate(15deg); }
+        }
+
+        /* Lớp hạt tương tác */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+        }
+
+        /* LỚP KÍNH TRÔI NỔI */
+        #glass-blob-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 8; /* Nằm trên hạt, dưới nội dung */
+            pointer-events: none; /* Cho phép click xuyên qua */
+        }
+        .glass-blob {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(139, 92, 246, 0.15));
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: transform 0.5s ease-out;
+        }
+ 
+        /* Lớp nội dung chính */
+        .main-content {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 900px;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+ 
+        .main-content h1 {
+            font-size: clamp(3rem, 10vw, 8rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            line-height: 1;
+            margin: 0;
+            color: var(--purple-text); /* Màu tím cố định */
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+ 
+        .main-content p {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            font-weight: 500;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-top: 1.5rem;
+            color: var(--purple-text); /* Màu tím cố định */
+        }
+ 
+        .main-content p::after {
+            content: '|';
+            position: absolute;
+            color: var(--text-secondary);
+            animation: typing-cursor-blink 1s infinite;
+        }
+ 
+        @keyframes typing-cursor-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+ 
+        .main-content p.typing-finished::after {
+            animation: none;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="background-shapes">
+        <div class="shape shape1"></div>
+        <div class="shape shape2"></div>
+        <div class="shape shape3"></div>
+    </div>
+
+    <canvas id="particle-canvas"></canvas>
+    <div id="glass-blob-container"></div>
+
+    <div class="main-content">
+        <h1>Coming<br>Soon</h1>
+        <p></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- SCRIPT HIỆU ỨNG GÕ CHỮ ---
+            const brandNameEl = document.querySelector('.main-content p');
+            const brandNameText = "English with Thành Nam";
+            brandNameEl.textContent = '';
+            let i = 0;
+            function typeWriter() {
+                if (i < brandNameText.length) {
+                    brandNameEl.textContent += brandNameText.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, 120);
+                } else {
+                    brandNameEl.classList.add('typing-finished');
+                }
+            }
+            setTimeout(typeWriter, 500);
+
+            // --- SCRIPT HẠT VÀ KÍNH TƯƠNG TÁC ---
+            const canvas = document.getElementById('particle-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particlesArray = [];
+            const numberOfParticles = (canvas.width * canvas.height) / 3000; // Tăng mật độ hạt
+            const colorPalette = ['#a855f7', '#22d3ee', '#facc15'];
+            
+            let globalDrift = { x: (Math.random() - 0.5) * 0.2, y: (Math.random() - 0.5) * 0.2 };
+            function changeDrift() {
+                globalDrift.x = (Math.random() - 0.5) * 0.2;
+                globalDrift.y = (Math.random() - 0.5) * 0.2;
+                setTimeout(changeDrift, 30000);
+            }
+            changeDrift();
+
+            const mouse = {
+                x: null,
+                y: null,
+                radius: 150
+            }
+
+            let explosion = {
+                active: false,
+                x: null,
+                y: null,
+                radius: 0,
+                timer: 0
+            };
+
+            window.addEventListener('mousemove', function(event){
+                mouse.x = event.x;
+                mouse.y = event.y;
+            });
+            window.addEventListener('mouseout', function(){
+                mouse.x = null;
+                mouse.y = null;
+            });
+            window.addEventListener('click', function(event) {
+                explosion.active = true;
+                explosion.x = event.x;
+                explosion.y = event.y;
+                explosion.radius = canvas.width / 8;
+                explosion.timer = 30;
+            });
+
+            class Particle {
+                constructor(isSpecial = false){
+                    this.isSpecial = isSpecial;
+                    this.reset();
+                }
+
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.originX = this.x;
+                    this.originY = this.y;
+                    this.vx = 0;
+                    this.vy = 0;
+                    
+                    this.size = this.isSpecial ? 3 : Math.random() * 1.5 + 0.5;
+                    this.baseSize = this.size;
+                    this.targetSize = this.size;
+                    this.baseColor = 'rgba(30, 41, 59, 0.4)';
+                    this.color = this.baseColor;
+                    this.glowColor = this.baseColor;
+                    
+                    this.life = Math.random() * 500 + 200;
+                    this.maxLife = this.life;
+                    this.opacity = 0;
+                    
+                    this.targetGlow = 0;
+                    this.currentGlow = 0;
+
+                    this.history = [];
+                    this.hasTrail = this.isSpecial || Math.random() < 0.15; // Tăng tần suất vệt sáng
+                }
+
+                draw(){
+                    if(this.hasTrail && this.history.length > 1) {
+                        ctx.beginPath();
+                        ctx.moveTo(this.history[0].x, this.history[0].y);
+                        for(let i = 1; i < this.history.length; i++) {
+                            ctx.lineTo(this.history[i].x, this.history[i].y);
+                        }
+                        ctx.strokeStyle = this.color;
+                        ctx.lineWidth = this.size * 0.5;
+                        ctx.globalAlpha = this.opacity * 0.5; 
+                        ctx.stroke();
+                    }
+
+                    ctx.globalAlpha = this.opacity; 
+                    ctx.shadowBlur = this.currentGlow;
+                    ctx.shadowColor = this.glowColor;
+                    ctx.fillStyle = this.color;
+
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                    ctx.fill();
+
+                    ctx.shadowBlur = 0; 
+                    ctx.globalAlpha = 1; 
+                }
+
+                update(){
+                    if(this.hasTrail) {
+                        this.history.push({x: this.x, y: this.y});
+                        if(this.history.length > 10) this.history.shift();
+                    }
+
+                    this.life--;
+                    if (this.life <= 0 || (this.opacity <= 0.01 && this.life < 100)) this.reset();
+                    
+                    if (this.life < 100) this.opacity -= 0.01;
+                    else if (this.opacity < 1) this.opacity += 0.01;
+                    
+                    if (explosion.active) {
+                        const dxExplosion = this.x - explosion.x;
+                        const dyExplosion = this.y - explosion.y;
+                        const distExplosion = Math.sqrt(dxExplosion*dxExplosion + dyExplosion*dyExplosion);
+
+                        if (distExplosion < explosion.radius) {
+                            const angle = Math.atan2(dyExplosion, dxExplosion);
+                            if (explosion.timer > 20) {
+                                const force = (explosion.radius - distExplosion) / explosion.radius;
+                                this.vx -= Math.cos(angle) * force * 4;
+                                this.vy -= Math.sin(angle) * force * 4;
+                            } 
+                            else {
+                                const force = (Math.random() * 50 + 30) / (distExplosion + 1); 
+                                this.vx += Math.cos(angle) * force;
+                                this.vy += Math.sin(angle) * force;
+                                this.targetGlow = 30;
+                                this.color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+                                this.glowColor = this.color;
+                            }
+                        }
+                    }
+
+                    let dx = this.x - mouse.x;
+                    let dy = this.y - mouse.y;
+                    let distance = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if (distance < mouse.radius && mouse.x !== null) {
+                        const force = (mouse.radius - distance) / mouse.radius;
+                        const angle = Math.atan2(dy, dx);
+                        this.vx += force * Math.cos(angle) * 1.5;
+                        this.vy += force * Math.sin(angle) * 1.5;
+                        
+                        this.targetGlow = this.isSpecial ? 25 : 15;
+                        this.targetSize = this.baseSize + 2;
+                        if(this.color === this.baseColor) this.color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+                        this.glowColor = this.color;
+
+                    } else {
+                        this.targetGlow = 0;
+                        this.targetSize = this.baseSize;
+                        this.color = this.baseColor;
+                    }
+                    
+                    this.currentGlow += (this.targetGlow - this.currentGlow) * 0.15;
+                    this.size += (this.targetSize - this.size) * 0.15;
+
+                    const returnForceX = (this.originX - this.x) * 0.01;
+                    const returnForceY = (this.originY - this.y) * 0.01;
+                    this.vx += returnForceX;
+                    this.vy += returnForceY;
+                    
+                    this.vx += globalDrift.x * 0.1;
+                    this.vy += globalDrift.y * 0.1;
+                    
+                    this.vx *= 0.96; 
+                    this.vy *= 0.96;
+
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    this.draw();
+                }
+            }
+            
+            class GlassBlob {
+                constructor() {
+                    this.el = document.createElement('div');
+                    this.el.className = 'glass-blob';
+                    document.getElementById('glass-blob-container').appendChild(this.el);
+                    this.reset();
+                }
+
+                reset() {
+                    const size = Math.random() * 150 + 50; // Kích thước ngẫu nhiên
+                    this.el.style.width = `${size}px`;
+                    this.el.style.height = `${size}px`;
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.3;
+                    this.vy = (Math.random() - 0.5) * 0.3;
+                }
+
+                update() {
+                    let dx = this.x - mouse.x;
+                    let dy = this.y - mouse.y;
+                    let distance = Math.sqrt(dx*dx + dy*dy);
+
+                    if (distance < mouse.radius * 1.5 && mouse.x !== null) {
+                        const force = (mouse.radius * 1.5 - distance) / (mouse.radius * 1.5);
+                        const angle = Math.atan2(dy, dx);
+                        this.vx += force * Math.cos(angle) * 0.2; // Tương tác nhẹ hơn
+                        this.vy += force * Math.sin(angle) * 0.2;
+                    }
+
+                    this.vx *= 0.98;
+                    this.vy *= 0.98;
+
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // Giữ trong màn hình
+                    if (this.x < -200) this.x = canvas.width + 200;
+                    if (this.x > canvas.width + 200) this.x = -200;
+                    if (this.y < -200) this.y = canvas.height + 200;
+                    if (this.y > canvas.height + 200) this.y = -200;
+
+                    this.el.style.transform = `translate(${this.x}px, ${this.y}px)`;
+                }
+            }
+
+            let glassBlobs = [];
+            
+            function init(){
+                particlesArray = [];
+                for (let i = 0; i < 5; i++) {
+                    particlesArray.push(new Particle(true));
+                }
+                for (let i = 0; i < numberOfParticles; i++){
+                    particlesArray.push(new Particle(false));
+                }
+
+                // Khởi tạo các khối kính
+                document.getElementById('glass-blob-container').innerHTML = '';
+                glassBlobs = [];
+                for (let i = 0; i < 5; i++) {
+                    glassBlobs.push(new GlassBlob());
+                }
+            }
+ 
+            function animate(){
+                requestAnimationFrame(animate);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+ 
+                for (let i = 0; i < particlesArray.length; i++){
+                    particlesArray[i].update();
+                }
+
+                for (let i = 0; i < glassBlobs.length; i++) {
+                    glassBlobs[i].update();
+                }
+ 
+                if (explosion.active) {
+                    explosion.timer--;
+                    if (explosion.timer <= 0) {
+                        explosion.active = false;
+                    }
+                }
+            }
+ 
+            init();
+            animate();
+ 
+            window.addEventListener('resize', function(){
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                init();
+            });
+        });
+     </script>
+ </body>
+ </html>
+ 
