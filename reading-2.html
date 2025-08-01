@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Reading - Final Version</title>
+    <style>
+        html {
+            font-size: 15px;
+        }
+        :root {
+            --panel-bg-color: rgba(255, 255, 255, 1);
+            --glass-bg-color: rgba(255, 255, 255, 0.6);
+            --glass-border-color: rgba(237, 242, 255, 0.9);
+            --shadow-color: rgba(67, 56, 202, 0.15);
+            --primary-accent: #6d28d9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --app-bg-start: #f5f7ff;
+            --app-bg-end: #e0e7ff;
+            --correct-bg: #dcfce7;
+            --correct-border: #22c55e;
+            --correct-text: #15803d;
+            --incorrect-bg: #fee2e2;
+            --incorrect-border: #ef4444;
+            --incorrect-text: #b91c1c;
+            --transition-fast: all 0.2s ease-out;
+            --transition-medium: all 0.3s ease-out;
+            --fade-duration: 150ms;
+        }
+        body.dark {
+            --panel-bg-color: rgba(30, 41, 59, 1);
+            --glass-bg-color: rgba(29, 39, 58, 0.6);
+            --glass-border-color: rgba(255, 255, 255, 0.15);
+            --shadow-color: rgba(0, 0, 0, 0.25);
+            --primary-accent: #a78bfa;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --app-bg-start: #0f172a;
+            --app-bg-end: #1e293b;
+            --correct-bg: #052e16;
+            --correct-border: #16a34a;
+            --correct-text: #a7f3d0;
+            --incorrect-bg: #450a0a;
+            --incorrect-border: #dc2626;
+            --incorrect-text: #fecaca;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--app-bg-start);
+            background-image: linear-gradient(135deg, var(--app-bg-start) 0%, var(--app-bg-end) 100%);
+            color: var(--text-primary);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        .background-shapes { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .shape { position: absolute; border-radius: 50%; filter: blur(80px); transition: opacity 0.5s ease; }
+        .shape1 { width: 350px; height: 350px; background: linear-gradient(135deg, #8b5cf6, #3b82f6); top: 5%; left: 5%; animation: float 28s infinite alternate ease-in-out; }
+        .shape2 { width: 280px; height: 280px; background: linear-gradient(135deg, #14b8a6, #67e8f9); bottom: 10%; right: 10%; animation: float 32s infinite alternate ease-in-out; }
+        body.dark .shape { opacity: 0.4; }
+        @keyframes float {
+            from { transform: translateY(20px) scale(1) rotate(0deg); }
+            to { transform: translateY(-20px) scale(1.05) rotate(20deg); }
+        }
+        .exam-container { width: 100%; height: 100%; max-width: 1800px; position: relative; z-index: 1; display: flex; }
+        .unified-panel { display: flex; flex-direction: column; width: 100%; height: 100%; border-radius: 16px; overflow: hidden; background: var(--panel-bg-color); border: 1px solid var(--glass-border-color); box-shadow: 0 8px 32px 0 var(--shadow-color); }
+        .glass-effect { background: var(--glass-bg-color); backdrop-filter: blur(8px) saturate(120%); -webkit-backdrop-filter: blur(8px) saturate(120%); }
+        .exam-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; flex-shrink: 0; position: relative; border-bottom: 1px solid var(--glass-border-color); z-index: 10; }
+        .header-left span { font-weight: 700; font-size: 1.5rem; color: var(--text-primary); }
+        .header-center { font-weight: 600; font-size: 1.25rem; color: var(--text-secondary); }
+        .header-right { display: flex; align-items: center; gap: 20px; }
+        #timer { background-color: #dc3545; color: white; padding: 8px 15px; border-radius: 12px; font-size: 1.1rem; font-weight: 700; box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3); }
+        .settings-icon { width: 24px; height: 24px; cursor: pointer; fill: var(--text-primary); transition: var(--transition-fast); }
+        .settings-icon:hover { fill: var(--primary-accent); }
+        .settings-dropdown {
+            position: absolute; top: 60px; right: 20px; z-index: 1002;
+            padding: 10px; border-radius: 12px; background: var(--panel-bg-color);
+            border: 1px solid var(--glass-border-color); box-shadow: 0 8px 32px 0 var(--shadow-color);
+            opacity: 0; transform: translateY(-10px); pointer-events: none;
+            transition: opacity var(--transition-fast), transform var(--transition-fast);
+        }
+        .settings-dropdown.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .settings-group { margin-bottom: 10px; }
+        .settings-group label { font-weight: 600; display: block; margin-bottom: 5px; color: var(--text-primary); }
+        .main-content { display: flex; flex-grow: 1; overflow: hidden; background: var(--panel-bg-color); position: relative; }
+        .panel { padding: 24px; overflow-y: auto; height: 100%; box-sizing: border-box; position: relative; z-index: 1; transition: opacity var(--fade-duration) ease-in-out; }
+        .panel.fading { opacity: 0; }
+        .passage-panel { width: 50%; }
+        .questions-panel { width: 50%; }
+        .passage-header { margin-bottom: 2rem; }
+        .passage-number { text-transform: uppercase; font-weight: 600; color: var(--text-secondary); font-size: 0.9em; margin-bottom: 1rem; }
+        .passage-instruction { color: var(--text-primary); margin-bottom: 2rem; font-size: 1em; }
+        .passage-title { font-size: 2em; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; line-height: 1.2; }
+        .passage-subtitle { font-style: italic; font-size: 1.1em; color: var(--text-secondary); margin-bottom: 2rem; }
+        .passage-content p { line-height: 1.7; text-align: justify; color: var(--text-primary) !important; margin-bottom: 1em; }
+        #resizer { width: 8px; cursor: col-resize; background: transparent; flex-shrink: 0; border-radius: 4px; transition: background 0.2s; display: flex; align-items: center; justify-content: center; z-index: 2; }
+        #resizer::before { content: ''; width: 2px; height: 50px; background-color: var(--glass-border-color); border-radius: 1px; transition: var(--transition-fast); }
+        #resizer:hover::before { background-color: var(--primary-accent); transform: scaleX(2); }
+        .exam-footer { padding: 12px 24px; display: flex; align-items: center; flex-shrink: 0; border-top: 1px solid var(--glass-border-color); }
+        .navigation-controls { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 1rem; }
+        .nav-left-group { display: flex; align-items: center; gap: 1rem; flex-grow: 1; overflow: hidden; }
+        .navigation-pane { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto; padding: 6px 0; -ms-overflow-style: none; scrollbar-width: none; }
+        .navigation-pane::-webkit-scrollbar { display: none; }
+        .nav-item { min-width: 32px; height: 32px; padding: 0 10px; border: 1px solid var(--glass-border-color); display: flex; justify-content: center; align-items: center; border-radius: 8px; cursor: pointer; transition: var(--transition-medium); flex-shrink: 0; font-weight: 600; color: var(--text-secondary); }
+        .nav-item.hidden { display: none; }
+        .nav-item:hover { background-color: rgba(109, 40, 217, 0.1); transform: translateY(-2px); }
+        .nav-item.answered { background-color: var(--primary-accent); color: white; border-color: transparent; }
+        body.dark .nav-item.answered { color: #1e293b; }
+        .nav-item.current { border-color: var(--primary-accent); border-width: 2px; color: var(--text-primary); transform: scale(1.1); box-shadow: 0 0 10px rgba(109, 40, 217, 0.3); }
+        .footer-buttons { flex-shrink: 0; }
+        .btn { padding: 10px 22px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: var(--transition-medium); display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid transparent; transform: translateY(0); }
+        .btn-main-action { background: var(--primary-accent); color: white; border-color: rgba(255, 255, 255, 0.2); box-shadow: 0 4px 15px rgba(91, 33, 182, 0.25); }
+        .btn-main-action:hover { background: #5b21b6; transform: translateY(-3px); box-shadow: 0 7px 20px rgba(91, 33, 182, 0.4); }
+        .btn-secondary { background: rgba(0, 0, 0, 0.05); color: var(--text-primary); }
+        .themed-select { padding: 8px 12px; border: 1px solid var(--glass-border-color); background-color: rgba(0,0,0,0.02); cursor: pointer; border-radius: 8px; font-weight: 600; color: var(--text-secondary); -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23475569' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.7rem center; background-size: 1em; padding-right: 2rem; flex-shrink: 0; transition: var(--transition-fast); }
+        .themed-select:hover { border-color: var(--primary-accent); }
+        .question-block { margin-bottom: 2.2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border-color); }
+        .question-range-title { font-weight: 700; font-size: 1.1rem; color: var(--text-primary); margin-bottom: 1rem; }
+        .question-instruction { font-weight: 600; margin-bottom: 1rem; color: var(--text-primary); line-height: 1.6; }
+        .question-text { margin-bottom: 10px; color: var(--text-secondary); line-height: 1.6; }
+        .mc-option { display: flex; align-items: center; gap: 10px; padding: 12px; margin-bottom: 8px; border-radius: 12px; border: 1px solid transparent; transition: var(--transition-fast); }
+        .mc-option:hover { background-color: rgba(109, 40, 217, 0.05); }
+        .tfn-options { display: flex; gap: 15px; margin-top: 10px; }
+        .tfn-label { padding: 10px 18px; border: 1px solid var(--glass-border-color); border-radius: 10px; cursor: pointer; font-weight: 600; transition: var(--transition-medium); color: var(--text-primary); }
+        .tfn-label input { display: none; }
+        .tfn-label:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .tfn-label.selected { background-color: var(--primary-accent); color: white; border-color: var(--primary-accent); transform: translateY(-2px) scale(1.05); }
+        .completion-input { border: none; border-bottom: 2px solid var(--primary-accent); background: transparent; padding: 4px 8px; font-size: 1em; width: 150px; text-align: center; color: var(--text-primary); transition: var(--transition-fast); }
+        .completion-input:focus { outline: none; background-color: rgba(109, 40, 217, 0.1); }
+        .matching-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .matching-item span { flex-grow: 1; }
+        .drop-zone { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; width: 100%; }
+        .drop-target { border: 1px dashed var(--text-secondary); padding: 10px; min-width: 150px; min-height: 42px; border-radius: 8px; background-color: rgba(0,0,0,0.05); flex-grow: 1; transition: var(--transition-fast); display: flex; justify-content: center; align-items: center; }
+        .drop-target:not(:empty) { padding: 0; border-style: solid; background-color: transparent; }
+        .drop-target.over { border-color: var(--primary-accent); background-color: rgba(109, 40, 217, 0.2); transform: scale(1.02); }
+        .drag-option { background: #fff; border: 1px solid var(--glass-border-color); padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); color: var(--text-primary); cursor: grab; transition: var(--transition-medium); flex-shrink: 0; }
+        body.dark .drag-option { background: rgba(255, 255, 255, 0.1); color: var(--text-primary); }
+        .dragging { opacity: 0.5; transform: scale(1.05) rotate(2deg) !important; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .modal { display: flex; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.2); backdrop-filter: blur(8px); justify-content: center; align-items: center; opacity: 0; transform: scale(0.95); pointer-events: none; transition: opacity var(--transition-medium), transform var(--transition-medium); }
+        .modal.show { opacity: 1; transform: scale(1); pointer-events: auto; }
+        .modal-content { padding: 24px; width: 90%; max-width: 500px; border-radius: 24px; text-align: center; transition: transform var(--transition-medium); transform: translateY(10px); }
+        .modal.show .modal-content { transform: translateY(0); }
+        .modal-score { font-size: 3rem; font-weight: 700; color: var(--primary-accent); margin: 20px 0; }
+        .review-mode .correct { background-color: var(--correct-bg) !important; border-color: var(--correct-border) !important; }
+        .review-mode .correct, .review-mode .correct-answer-text { color: var(--correct-text) !important; }
+        .review-mode .incorrect { background-color: var(--incorrect-bg) !important; border-color: var(--incorrect-border) !important; }
+        .review-mode .incorrect, .review-mode .incorrect-text { color: var(--incorrect-text) !important; }
+        .review-mode .completion-input.incorrect { text-decoration: line-through; }
+        .correct-answer-text { font-weight: 600; margin-left: 10px; }
+        .note-completion-block h4, .note-completion-block h5 { color: var(--text-primary); font-weight: 700; margin-bottom: 0.5rem; }
+        .note-completion-block h5 { font-size: 1.05rem; }
+        .note-completion-block ul { list-style-type: none; padding-left: 20px; margin: 0.5rem 0 1rem 0; }
+        .note-completion-block li { color: var(--text-secondary); margin-bottom: 0.75rem; }
+        .instruction-box { line-height: 1.7; color: var(--text-secondary); }
+        .instruction-box b { color: var(--text-primary); }
+        .instruction-box span { display: inline-block; width: 20px; }
+    </style>
+</head>
+<body>
+    <div class="background-shapes"><div class="shape shape1"></div><div class="shape shape2"></div></div>
+    <div class="exam-container">
+        <div class="unified-panel">
+            <header class="exam-header glass-effect">
+                <div class="header-left"> <span>IELTS</span> </div>
+                <div class="header-center">Reading Test</div>
+                <div class="header-right">
+                    <div id="timer">60:00</div>
+                    <div id="settings-btn"><svg class="settings-icon" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path></svg></div>
+                </div>
+                <div class="settings-dropdown" id="settings-dropdown">
+                    <div class="settings-group"><label for="text-size">Text Size</label><select id="text-size" class="themed-select"><option value="1">Regular</option><option value="1.2">Large</option><option value="1.4">Extra Large</option></select></div>
+                    <div class="settings-group"><label for="theme-toggle">Theme</label><select id="theme-toggle" class="themed-select"><option value="light">Light</option><option value="dark">Dark</option></select></div>
+                </div>
+            </header>
+            <main class="main-content">
+                <div class="panel passage-panel" id="passage-panel"><div id="passage-content" class="passage-content"></div></div>
+                <div id="resizer"></div>
+                <div class="panel questions-panel" id="questions-panel"><div id="questions-content"></div></div>
+            </main>
+            <footer class="exam-footer glass-effect">
+                <div class="navigation-controls">
+                    <div class="nav-left-group">
+                        <div class="passage-filter"><select id="passage-select" class="themed-select"><option value="1">Passage 1</option><option value="2">Passage 2</option><option value="3">Passage 3</option></select></div>
+                        <div id="navigation-pane" class="navigation-pane"></div>
+                    </div>
+                     <div class="footer-buttons"><button id="review-btn" class="btn btn-secondary" style="display: none;">Làm lại</button><button id="submit-btn" class="btn btn-main-action">Nộp bài</button></div>
+                </div>
+            </footer>
+        </div>
+    </div>
+    <div id="result-modal" class="modal"><div class="modal-content glass-effect"><h2>Hoàn thành bài thi!</h2><p>Điểm số của bạn là:</p><p id="modal-score" class="modal-score">0 / 40</p><button id="close-modal-btn" class="btn btn-main-action">Xem lại bài làm</button></div></div>
+    <div id="confirm-submit-modal" class="modal"><div class="modal-content glass-effect"><h2>Xác nhận nộp bài</h2><p style="color: var(--text-secondary); margin: 1rem 0;">Bạn có chắc chắn muốn nộp bài không?</p><div style="display: flex; justify-content: center; gap: 1rem;"><button id="confirm-submit-no" class="btn btn-secondary">Không</button><button id="confirm-submit-yes" class="btn btn-main-action">Có, nộp bài</button></div></div></div>
+
+    <script>
+    const examData = {
+        title: "IELTS Reading Full Test",
+        timeLimitMinutes: 60,
+        passages: [
+            {
+                id: 1,
+                content: `
+                    <div class="passage-header">
+                        <p class="passage-number">READING PASSAGE 1</p>
+                        <p class="passage-instruction">You should spend about 20 minutes on Questions 1-13, which are based on Reading Passage 1.</p>
+                        <h2 class="passage-title">The Clipper Races: an era of competition between cargo ships</h2>
+                    </div>
+                    <p>During the seventeenth and eighteenth centuries, the British East India Company had the monopoly on trade with China and India. This meant that because no rival could legally import tea or other goods from these countries at this time, the company was rarely in a hurry to transport its merchandise. Instead, its priority was to minimise costs by carrying as much as possible on each ship. This meant that its ships known as East Indiamen - were enormous, strong and very slow. By 1800, the average East Indiaman could carry 1,200 tons of merchandise. The trading pattern for China tea usually meant the East Indiamen set sail from Britain in January, sailed round the Cape of Good Hope at the southernmost tip of Africa, and arrived in China in September. There they would load up that year's tea harvest, set off again and, depending on the wind and weather, aim to arrive back by the following September. So even with favourable sailing conditions, the round trip lasted almost two years, and if anything went wrong it could take a lot longer.</p><p>However, by 1834 the company had lost its trading monopolies, and tea had become a freely traded item. Having no more use for its great ships, the company sold them off, and many were bought by merchants or their captains, who continued to plough the seas between Britain and China. But now that tea could be traded freely, a few smart sailors began to realise that whoever brought each new harvest of tea to Britain first, stood to make the most money. This was partly because if you were home first, you could sell your shipment of tea before your competitors even arrived, and partly because consumers in Britain in the nineteenth century believed that the fresher and earlier-picked the tea, the better the resulting drink. Tea traders now needed faster, sleeker ships to bring their precious cargo back. Nevertheless, in Britain this idea only caught on slowly, and while the 1840s saw a few faster ships launched, for the time being many merchants remained satisfied with the slow but reliable East Indiamen.</p><p>In fact it was the Americans who pioneered the first clipper ships. These vessels were fast and slender, with a narrow hull that was deeper at the back than at the front and masses of sails on tall masts. They earned their name from the way that they ‘clipped off’ journey times. British merchants resolved to build their own clippers to rival the Americans and the first British tea clipper, Stornaway, was built in Aberdeen in 1850. More tea clippers were designed and built in Britain throughout the 1850s and 1860s; they had a narrower beam than their American equivalents, making them less powerful during storms, but faster in calmer weather.</p><p>There was a great spirit of competition between the British and American ships plying the tea trade, but to begin with the Americans had the edge. Then in 1851 a British ship owner, Richard Green, built the aptly named clipper Challenger, with the stated intention of beating the American ships. Loaded with tea, Challenger left China for London in 1852 at the same time as the American clipper Challenge, a much larger, older ship, already greatly admired for its speed. Large sums were bet on which would complete the journey first. In the event, the British ship beat its rival to London by two days, amid much jubilation. From then on, such international races grew in popularity.</p><p>After 1855, American participation in the British tea trade gradually stopped. But even without the Anglo-American rivalry, the competitive spirit continued. It was really ignited when new ports were opened up for trade in China. These included Fouchow, which was much closer to the tea-producing areas than Canton, the port used previously. As a result, tea could be loaded onboard earlier and fresher, and the clippers could set off in late May or early June – sometimes not even taking time to fill out the official paperwork – racing back to Britain whatever the difficulties. They sped down through the South China Sea and into the Indian Ocean, then raced to get round the southernmost tip of Africa at the Cape of Good Hope. Then it was north across the vast Atlantic, past the Azores, through the English Channel and into the estuary of the River Thames. Once there, they would be towed by tugs, up the river and into the docks.</p><p>The cargo of the winning ship could earn a premium of up to sixpence per pound-and so the captain and crew were rewarded by the owners of the cargo. But the races were about more than just money: the crews, about 40 men on each clipper, were expert sailors, proud of their ships, and they delighted in competing against each other. Without their enthusiasm, the races would never have happened, since getting the ship home as fast as possible required the crew to be totally dedicated and to sacrifice much of their rest for the duration of the race.</p>`
+            },
+            {
+                id: 2,
+                content: `
+                    <div class="passage-header">
+                        <p class="passage-number">READING PASSAGE 2</p>
+                        <p class="passage-instruction">You should spend about 20 minutes on Questions 14-26, which are based on Reading Passage 2.</p>
+                        <h2 class="passage-title">Orientation of birds</h2>
+                    </div>
+                    <p><b>A</b> &nbsp; For many of us, the way birds are able to orientate is both astounding and difficult to appreciate fully. For instance, the annual migration of the golden plover of the Pacific takes it from Alaska to Hawaii on a flight of well over 3000 kilometres, and if it were to deviate by only one degree, it would miss the island on which it nests.</p><p><b>B</b> &nbsp; The first systematic studies on orientation in birds were made possible by the 'homing instinct' exhibited by so many species. Birds are caught at a time when they show an attachment to their territory, especially during the nesting season. They are taken to some spot, released, and the percentage of returns is recorded. The distance can be varied, and the direction, as well as the method of transporting them, and then the influence of climatic and other factors on their ability to find their way home can be studied. These experiments have shown a wide variation in ability to home, and three types of homing behaviour have been identified.</p><p><b>C</b> &nbsp; In the first type, birds methodically explore the area in which they are released until they pick up some familiar feature, and then they quickly find their way back to the nest. Such birds possess a highly developed visual memory, as experiments with pigeons have shown. Domestic pigeons have been trained to peck at a certain point on an aerial photograph, with a system of rewards, and four years later the birds were still able to respond to this training when placed on the aerial photograph. Birds' eyes have a power of resolution two to three times greater than ours, enabling them to pick up very fine details. If a bird uses only this type of homing behaviour, however, it can only succeed if the point of release is not too far away. If the birds are transported 800 kilometres from their nest, it is only by good fortune that they find their way back as a result of long exploratory flights. Usually, the area known to a bird is its feeding territory. Released within this area, the birds soon make their return; release them outside it and far fewer return. However, if a bird is released for a second time in the same place, its visual memory comes into play, and the bird, no longer requiring tedious exploratory flights, will return much more quickly.</p><p><b>D</b> &nbsp; The second type of homing behaviour is shown by birds that are capable of choosing their flight direction and holding to it for the rest of their journey. How do they decide what direction to take? They appear to choose their normal migration direction even if they are released in a different place from their usual stalling point. If, for example, birds which normally fly to the north-east to reach latitude 45 degrees north are released at that latitude, they will immediately start flying north-east anyway. So if they're released further to the west, they'll maintain the correct direction, but fly west of their destination, and so fail to arrive.</p><p><b>E</b> &nbsp; The third type of homing behaviour shows the highest degree of orientation. Released at one point, the birds immediately take stock of it, compare its position with that of the nest, decide on the direction and fly off. This happens even if the birds are in a country right off their migration routes, where they have never been before. In one example, a laysan albatross returned to its nesting area on Midway Island in the middle of the Pacific, having flown over 5000 kilometres from the west coastal of the USA in just over ten days. This is a perfect example of the third type of homing, for the albatross clearly couldn't rely on any landmarks over the vast expanse of the Pacific Ocean.</p><p><b>F</b> &nbsp; The percentage of successful birds varies greatly, being highest in those species with a strong migratory behaviour. Thus the lesser black-backed gull is more migratory than the herring gull and more often reaches 'home'. Great migrants such as the swift have the highest percentage of returns. In one case, seven out of nine alpine swifts were recaptured at their nests after being displaced some 1400 kilometres; one made the journey in three days.</p><p><b>G</b> &nbsp; What part does heredity play in all this? Two research studies suggest that instinctive, i.e. genetically inherited, behaviour patterns play a part in navigation. The first was carried out by Ernst Schuz and it is highly significant. Schuz caught first year European storks and released them later, after the departure of the adult storks at a time when they normally make their south-west autumn migration to Africa. The recaptures showed that, in spite of thefact that there were no adults to guide them, the birds unanimously headed south-west. This was a most striking finding, for it showed that the birds had an innate and unlearned attraction for the African wintering area that they have occupied for thousands of years.</p><p><b>H</b> &nbsp; The case of starlings is a little different. These birds have a great aptitude for homing, but this behaviour differs in the different age groups. Birds that were shifted to the south-east of their normal migration route split into two lots. The adults, in full possession of their gift for orientation, found their wintering area by modifying their direction by 90 degrees, whereas the juveniles sought their winter quarters to the south-east of their real position.</p>`
+            },
+            {
+                id: 3,
+                content: `
+                    <div class="passage-header">
+                        <p class="passage-number">READING PASSAGE 3</p>
+                        <p class="passage-instruction">You should spend about 20 minutes on Questions 27-40, which are based on Reading Passage 3.</p>
+                        <h2 class="passage-title">The role of accidents in business</h2>
+                    </div>
+                    <p>In 1894 Dr John Kellogg and his brother. Will, were supervising a hospital and health spa in Michigan. The patients were on a restricted diet. One day, the brothers left cooked wheat untended for more than 24 hours. When they returned, they saw what they had done. It was no good to eat, but they decided to run the stale wheat through rollers, just to see how it would turn out. Normally, the process produced long sheets, but they were surprised to discover that this time the rollers created flat flakes. They baked them, and then tried the same thing with corn. From this accidental discovery came the cornflakes that generations have now been eating for breakfast.</p><p>Accidents happen; there is nothing predictable and orderly about innovation. Nobel laureate Sir Alan Hodgkin, who discovered how nerve cells transmit electrical impulses between the skin and the brain, commented: 'I believe that the record of my published papers conveys an impression of directedness and planning which does not at all coincide with the actual sequence of events.' The same rule applies in business. The mistake that gave us cornflakes keeps repeating itself in the history of disruptive innovation, the kind that transforms markets. Louis Daguerre, for, instance, discovered the technique that gave us photography in the 1830s, when drops of mercury from a shattered thermometer produced a photographic image. The microwave was discovered when Peroy Spender, a scientist with Raytheon, was testing a new vacuum tube and discovered that the sweet in his pocket had melted. The artificial sweetener, saccharin, was the unintentional result of a medical scientist's work on a chemical treatment for gastric ulcers. While working for the firm 3M, researcher Art Fry had no idea he was taking the first steps towards Post-It Notes when he used bits of adhesive office paper that could be easily lifted off the page to replace the scrap paper bookmarks that kept falling out of his hymn book.</p><p>Breakthrough and disruptive innovation are rarely driven by orderly process. Usually they come out of a chaotic, haphazard mess, which is why big companies, full of managers schooled in business programmes designed to eliminate random variation and mistakes, struggle with them. In these sorts of environments, accidents are called failures and are discouraged. It is no surprise then that research from the late British economist Paul Geroski and London Business School's Constantinos Markides found that companies that were skilled at innovation were usually not that skilled when it came to commercialisation, and vice versa. Their book, Fast Second, divides businesses into 'colonists' and 'consolidators'. Small and nimble, colonists are adept at creating market niches but are terrible institution builders. Consolidators, with their strong cultures of discipline and cost control, know how to take clever ideas from other firms and turn them into mass-market items. Microsoft is a prime instance of this.</p><p>With companies spending hundreds of billions of dollars on research and development, US academics Robert Austin and Lee Devin examined how managers can encourage productive slip-ups. In their article Accident, Intention and Expectation in the Innovation Process, they argue that business processes actually prevent helpful mis-steps from occurring. According to their catalogue of accidents, not all false steps and mishaps are equal. Accidents, they say, come from unlikely mental associations such as memories and vague connections, looking for something and finding it in an unexpected way, looking for one thing and finding something else, and not looking for anything but finding something valuable.</p><p>Accident-prone innovation, they say, requires companies to get outside the 'cone of expectation'. It means throwing together groups from diverse backgrounds, and combining ideas in unpredictable ways. Other strategies also include having systems that watch out for accidents and examine them for value, generating them when they do not happen often enough, seizing oil the useful ones, capturing their valuable features, and building on them to add value and give potential for useful accidents. All this, however, requires thinking that is often counter-intuitive to the way businesses operate. In other words, it is the kind of thinking that goes against the beliefs of most business managers. It runs counter to the notion frequently pushes by consultants that you can 'harness' creativity and direct it to line up with intention. 'The cost of accidents business, people tend to call such efforts failure.'</p><p>There are tentative signs that more companies are starting to realise that failure can lead to commercial gain, and that this is part or the risk-talking that underpins innovation. Australia's largest brewing company, for example, made a bad error when it launched a new beer called Empire Lager, pitched at younger consumers. Having spent a fortune creating a beer with a sweeter taste, designing a great-looking bottle and a television campaign, Foster's was left with a drink that no-one wanted to buy. The target market was more interested in brands built up by word of mouth. Instead of wiping the unsuccessfull product launch, Fosters used this lesson learned to go on and develop other brands instead. One of them, Pure Blonde, is now ranked as Australia's fifth-largest beer brand. Unlike Empire Lager, there has been almost no promotion and its sales are generated more by word of mouth. Other companies are taking similar steps to study their own slip-ups. Intuit, the company behind financial tools such as Quicken, holds regular 'When Learning Hurts' sessions. But this sort of transformation is never easy. In a market that focuses on the short-term, convincing employees and shareholders to tolerate failure and not play it safe is a big thing to ask.</p>`
+            }
+        ],
+        questionBlocks: [
+            {
+                type: 'true_false_not_given',
+                passage: 1,
+                range: '1-6',
+                instruction: `Do the following statements agree with the information given in Reading Passage 1?<br><br><div class="instruction-box">In boxes 1-6 on your answer sheet, write<br><b>TRUE</b><span></span>if the statement agrees with the information<br><b>FALSE</b><span></span>if the statement contradicts the information<br><b>NOT GIVEN</b><span></span>if there is no information on this</div>`,
+                items: [
+                    { qNum: 1, text: 'In the seventeenth and eighteenth centuries, the British East India Company faced a lot of competition.', answer: 'FALSE' },
+                    { qNum: 2, text: 'Before 1800, cargo size was the most important consideration for the East India Company.', answer: 'TRUE' },
+                    { qNum: 3, text: 'At best, voyages of the East Indiamen to China and back took nearly two years to complete.', answer: 'TRUE' },
+                    { qNum: 4, text: 'Before 1834, voyages to and from China were considered to be highly dangerous.', answer: 'NOT GIVEN' },
+                    { qNum: 5, text: 'After 1834, the ships which had served the East India Company stopped being used for commercial purposes.', answer: 'FALSE' },
+                    { qNum: 6, text: 'In the nineteenth century, British drinkers preferred tea made from mature leaves to that made from younger leaves.', answer: 'FALSE' }
+                ]
+            },
+            {
+                type: 'custom_html_completion',
+                passage: 1,
+                range: '7-13',
+                instruction: 'Complete the notes below.<br>Choose <strong>ONE WORD ONLY</strong> from the passage for each answer.',
+                content: `
+                    <div class="note-completion-block" data-q-container="7-13">
+                        <h4>Clipper races</h4>
+                        <h5>The ships</h5>
+                        <ul>
+                            <li>Clipper ships were first used for trading by American merchants.</li>
+                            <li data-q-container="7">The ships were remarkable for the number of <b>7.</b> <input type="text" class="completion-input" data-q-num="7"> they had.</li>
+                            <li data-q-container="8">The performance of British tea clippers was particularly affected when there were <b>8.</b> <input type="text" class="completion-input" data-q-num="8"> at sea.</li>
+                        </ul>
+                        <h5>The races</h5>
+                        <ul>
+                            <li data-q-container="9">It was in a ship called <b>9.</b> <input type="text" class="completion-input" data-q-num="9"> that the British first competed successfully against the Americans.</li>
+                            <li>Richard Green's ship arrived two days ahead of its competitor.</li>
+                            <li data-q-container="10">Competition increased when additional Chinese trading <b>10.</b> <input type="text" class="completion-input" data-q-num="10"> were established.</li>
+                            <li data-q-container="11">Merchants were occasionally in such a hurry that they failed to complete the <b>11.</b> <input type="text" class="completion-input" data-q-num="11"> before leaving China.</li>
+                             <li data-q-container="12">At the end of their journey, the ships needed the help of <b>12.</b> <input type="text" class="completion-input" data-q-num="12"></li>
+                        </ul>
+                        <h5>The rewards</h5>
+                        <ul>
+                            <li data-q-container="13">The crews were motivated by both <b>13.</b> <input type="text" class="completion-input" data-q-num="13"> and their enthusiasm for the competition.</li>
+                        </ul>
+                    </div>
+                `,
+                answers: {7: 'sails', 8: 'storms', 9: 'Challenger', 10: 'ports', 11: 'paperwork', 12: 'tugs', 13: 'money'}
+            },
+            {
+                type: 'custom_html_completion',
+                passage: 2,
+                range: '14-18',
+                instruction: 'Complete the summary below.<br>Choose <strong>NO MORE THAN TWO WORDS</strong> from the passage for each answer.',
+                content: `
+                    <div class="note-completion-block" data-q-container="14-18">
+                        <h4>Types of homing behaviour</h4>
+                        <h5>First type:</h5>
+                        <ul>
+                            <li data-q-container="14">Birds rely on their sophisticated <b>14.</b> <input type="text" class="completion-input" data-q-num="14">. However, they are generally most successful if they are released within their feeding territory.</li>
+                        </ul>
+                        <h5>Second type:</h5>
+                        <ul>
+                            <li data-q-container="15">Birds select their accustomed <b>15.</b> <input type="text" class="completion-input" data-q-num="15"> no matter where they are released.</li>
+                            <li data-q-container="16">As a result, they may miss their <b>16.</b> <input type="text" class="completion-input" data-q-num="16"></li>
+                        </ul>
+                        <h5>Third type:</h5>
+                        <ul>
+                            <li data-q-container="17">Birds orientate correctly, even when they are released in an unfamiliar place and have no <b>17.</b> <input type="text" class="completion-input" data-q-num="17"> to make use of.</li>
+                            <li data-q-container="18">One bird with this type of skill is the <b>18.</b> <input type="text" class="completion-input" data-q-num="18"></li>
+                        </ul>
+                    </div>
+                `,
+                answers: {14: 'visual memory', 15: 'migration direction', 16: 'destination', 17: 'landmarks', 18: 'laysan albatross'}
+            },
+            {
+                type: 'matching_features',
+                passage: 2,
+                range: '19-22',
+                instruction: 'Reading Passage 2 has eight paragraphs, A-H.<br>Which paragraph contains the following information?<br><em>Write the correct letter, A-H, in boxes 19-22 on your answer sheet.</em><br><b>NB</b> You may use any letter more than once.',
+                features: ['Paragraph A', 'Paragraph B', 'Paragraph C', 'Paragraph D', 'Paragraph E', 'Paragraph F', 'Paragraph G', 'Paragraph H'],
+                items: [
+                    { qNum: 19, text: "the effects of distance on some birds' ability to find their nests", answer: 'C' },
+                    { qNum: 20, text: "a methodology for testing the general ability of birds to find their nests", answer: 'B' },
+                    { qNum: 21, text: 'one aspect of physical ability in humans and birds', answer: 'C' },
+                    { qNum: 22, text: "how some birds' migration was delayed for experimental purposes", answer: 'G' }
+                ]
+            },
+            {
+                type: 'matching_features',
+                passage: 2,
+                range: '23-26',
+                instruction: 'Look at the following types of birds (Questions 23-26) and the list of points which the author wishes to illustrate below.<br>Match each bird with the point which it illustrates, A-G.<br><em>Write the correct letter, A-G, in boxes 23-26 on your answer sheet.</em>',
+                features: [
+                    'an ability to orientate without previous training',
+                    'the speed at which birds can fly',
+                    'the ability to remember things seen previously',
+                    'the effect of age on homing ability',
+                    'the strength required to fly a great distance',
+                    'a high success rate in finding nests',
+                    'the importance of seasonal cues for migrating birds'
+                ],
+                items: [
+                    { qNum: 23, text: 'domestic pigeon', answer: 'C' },
+                    { qNum: 24, text: 'alpine swift', answer: 'F' },
+                    { qNum: 25, text: 'European stork', answer: 'A' },
+                    { qNum: 26, text: 'starling', answer: 'D' }
+                ]
+            },
+            {
+                type: 'yes_no_not_given',
+                passage: 3,
+                range: '27-31',
+                instruction: `Do the following statements agree with the claims of the writer in Reading Passage 3?<br><br><div class="instruction-box">In boxes 27-31 on your answer sheet, write<br><b>YES</b><span></span>if the statement agrees with the claims of the writer<br><b>NO</b><span></span>if the statement contradicts the claims of the writer<br><b>NOT GIVEN</b><span></span>if it is impossible to say what the writer thinks about this</div>`,
+                items: [
+                    { qNum: 27, text: 'The delay in the process used by the Kellogg brothers affected the final product.', answer: 'YES' },
+                    { qNum: 28, text: 'Sir Alan Hodgkin is an example of someone whose work proceeded in a logical and systematic way.', answer: 'NO' },
+                    { qNum: 29, text: 'Daguerre is an exception to the general rule of innovation.', answer: 'NO' },
+                    { qNum: 30, text: 'The discovery of saccharin occurred by accident during drug research.', answer: 'YES' },
+                    { qNum: 31, text: 'The company 3M should have supported Art Fry by funding his idea of Post-It Notes.', answer: 'NOT GIVEN' }
+                ]
+            },
+            {
+                type: 'matching_sentence_endings',
+                passage: 3,
+                range: '32-35',
+                instruction: 'Complete each sentence with the correct ending, A-H, below.<br><em>Write the correct letter, A-H, in boxes 32-35 on your answer sheet.</em>',
+                items: [
+                    { qNum: 32, start: 'The usual business environment' },
+                    { qNum: 33, start: "Geroki and Markides's book" },
+                    { qNum: 34, start: 'Microsoft is an example of a company which' },
+                    { qNum: 35, start: 'The origin of useful accidents' }
+                ],
+                endings: [
+                    'A. can be found in unusual thoughts and chance events.',
+                    'B. can be taught in business schools.',
+                    'C. has made a success from someone else\'s invention.',
+                    'D. is designed to nurture differences.',
+                    'E. is unlikely to lead to creative innovation.',
+                    'F. says that all mistakes are the same.',
+                    'G. shows that businesses are good at either inventing of selling.',
+                    'H. suggests ways of increasing the number of mistakes.'
+                ],
+                answers: { '32': 'E', '33': 'G', '34': 'C', '35': 'A' }
+            },
+            {
+                type: 'multiple_choice_one_answer',
+                passage: 3,
+                range: '36-40',
+                instruction: 'Choose the correct letter, A, B, C or D.<br><em>Write the correct letter in boxes 36-40 on your answer sheet.</em>',
+                items: [
+                    { qNum: 36, text: "How do Austin and Devin advise companies to get out of the 'cone of expectation'?", options: ['A. by decreasing the number of company systems','B. by forming teams of different types of people','C. by hiring new and creative people','D. by holding regular brainstorming meetings'], answer: 1 },
+                    { qNum: 37, text: "In recommending 'counter-intuitive' thinking, what do Austin and Devin imply?", options: ['A. that failing at business is bad for staff morale','B. that innovation cannot be planned for','C. that most businesses should be devoted to avoiding mistakes','D. that the cost of mistakes is an important consideration'], answer: 1 },
+                    { qNum: 38, text: 'The writer describes the Empire Lager disaster in order to show that', options: ['A. success can come out of a business failure','B. the majority of companies now value risk-talking.','C. TV advertising works better on older people','D. young beer drinkers do not like a sweet taste'], answer: 0 },
+                    { qNum: 39, text: 'Pure Blonde has been more successful than Empire Lager because', options: ['A. digital media other than TV were used.','B. it was advertised under a different brand name.','C. it was launched with very little advertising.','D. the advertising budget was larger'], answer: 2 },
+                    { qNum: 40, text: 'The writer concludes that creating a culture that learns from mistakes', options: ['A. brings short-term financial gains.','B. can be very difficult for some companies.','C. holds no risk for workers.','D. is a popular move with shareholders.'], answer: 1 }
+                ]
+            }
+        ]
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const passageContentEl = document.getElementById('passage-content');
+        const questionsContentEl = document.getElementById('questions-content');
+        const navigationPaneEl = document.getElementById('navigation-pane');
+        const timerEl = document.getElementById('timer');
+        const passagePanelEl = document.getElementById('passage-panel');
+        const questionsPanelEl = document.getElementById('questions-panel');
+        const passageSelectEl = document.getElementById('passage-select');
+        const resizerEl = document.getElementById('resizer');
+        const settingsDropdownEl = document.getElementById('settings-dropdown');
+        const resultModalEl = document.getElementById('result-modal');
+        const modalScoreEl = document.getElementById('modal-score');
+        
+        let userAnswers = {};
+        let timerInterval;
+        let isResizing = false;
+        let dragged = null;
+        let questionDataMap = new Map();
+
+        const RENDERERS = {
+            multiple_choice_one_answer: block => `<p class="question-instruction">${block.instruction}</p>${block.items.map(item => `<div class="question-item" data-q-container="${item.qNum}"><p class="question-text"><b>${item.qNum}.</b> ${item.text}</p>${item.options.map((opt, i) => `<label class="mc-option"><input type="radio" name="q${item.qNum}" value="${i}"><span>${opt}</span></label>`).join('')}</div>`).join('')}`,
+            multiple_choice_more_answers: block => `<div data-q-container="${block.range.split('-')[0]}"><p class="question-instruction">${block.instruction}</p><p class="question-text"><b>${block.range}.</b> ${block.text}</p>${block.options.map((opt, i) => `<label class="mc-option"><input type="checkbox" name="q${block.range.split('-')[0]}" value="${i}"><span>${opt}</span></label>`).join('')}</div>`,
+            true_false_not_given: block => `<p class="question-instruction">${block.instruction}</p>${block.items.map(item => `<div class="question-item" data-q-container="${item.qNum}"><p class="question-text"><b>${item.qNum}.</b> ${item.text}</p><div class="tfn-options">${['TRUE', 'FALSE', 'NOT GIVEN'].map(opt => `<label class="tfn-label"><input type="radio" name="q${item.qNum}" value="${opt}">${opt}</label>`).join('')}</div></div>`).join('')}`,
+            yes_no_not_given: block => `<p class="question-instruction">${block.instruction}</p>${block.items.map(item => `<div class="question-item" data-q-container="${item.qNum}"><p class="question-text"><b>${item.qNum}.</b> ${item.text}</p><div class="tfn-options">${['YES', 'NO', 'NOT GIVEN'].map(opt => `<label class="tfn-label"><input type="radio" name="q${item.qNum}" value="${opt}">${opt}</label>`).join('')}</div></div>`).join('')}`,
+            note_completion: block => RENDERERS.sentence_completion(block),
+            sentence_completion: block => `<p class="question-instruction">${block.instruction}</p>${block.items.map(item => `<div class="question-item" data-q-container="${item.qNum}"><p class="question-text"><b>${item.qNum}.</b> ${item.text.replace('______', `<input type="text" class="completion-input" data-q-num="${item.qNum}">`)}</p></div>`).join('')}`,
+            custom_html_completion: block => `<p class="question-instruction">${block.instruction}</p>${block.content}`,
+            summary_completion_from_text: block => `<p class="question-instruction">${block.instruction}</p><p>${block.summary.replace(/(\d+)\.______/g, (match, qNum) => `<span data-q-container="${qNum}"><b>${qNum}.</b> <input type="text" class="completion-input" data-q-num="${qNum}"></span>`)}</p>`,
+            table_completion: block => `<p class="question-instruction">${block.instruction}</p><table class="completion-table"><thead><tr>${block.headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${block.rows.map(row => `<tr>${row.map(cell => typeof cell === 'object' ? `<td data-q-container="${cell.qNum}"><b>${cell.qNum}.</b> <input type="text" class="completion-input" data-q-num="${cell.qNum}"></td>` : `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody></table>`,
+            matching_features: block => `<p class="question-instruction">${block.instruction}</p><div style="margin-bottom:1rem;line-height:1.5;">${block.features.map((f, i) => `<b>${String.fromCharCode(65+i)}</b>. ${f}`).join('<br>')}</div>${block.items.map(item => `<div class="matching-item" data-q-container="${item.qNum}"><span><b>${item.qNum}.</b> ${item.text}</span><select class="themed-select" data-q-num="${item.qNum}"><option value="">Select...</option>${block.features.map((f, i) => `<option value="${String.fromCharCode(65 + i)}">${String.fromCharCode(65 + i)}</option>`).join('')}</select></div>`).join('')}`,
+            summary_completion_from_list: block => `<p class="question-instruction">${block.instruction}</p><div class="drag-drop-container"><div class="drop-zone-area"><p>${block.summary.replace(/(\d+)\.______/g, (match, qNum) => `<span class="drop-zone" data-q-container="${qNum}"><b>${qNum}.</b> <span class="drop-target" data-q-num="${qNum}"></span></span>`)}</p></div><div class="drag-options-area">${block.options.map(opt => `<div class="drag-option" draggable="true" data-value="${opt.split('.')[0]}">${opt}</div>`).join('')}</div></div>`,
+            matching_sentence_endings: block => `<p class="question-instruction">${block.instruction}</p><div class="drag-drop-container"><div class="drop-zone-area">${block.items.map(item => `<div class="drop-zone" data-q-container="${item.qNum}"><span style="flex-shrink:0;"><b>${item.qNum}.</b> ${item.start}</span><span class="drop-target" data-q-num="${item.qNum}"></span></div>`).join('')}</div><div class="drag-options-area">${block.endings.map(ending => `<div class="drag-option" draggable="true" data-value="${ending.charAt(0)}">${ending}</div>`).join('')}</div></div>`,
+        };
+
+        const updateAnswer = (qNum, value) => {
+            const navItem = document.querySelector(`.nav-item[data-q-num='${qNum}']`);
+            if (value && value.length !== 0 && String(value).trim() !== "") {
+                userAnswers[qNum] = value;
+                navItem?.classList.add('answered');
+            } else {
+                delete userAnswers[qNum];
+                navItem?.classList.remove('answered');
+            }
+        };
+
+        const showPassageAndQuestions = (passageNum, isInitialLoad = false) => {
+            const passageNumStr = String(passageNum);
+            const panels = [passagePanelEl, questionsPanelEl];
+            const displayContent = () => {
+                document.querySelectorAll('#passage-content > div, #questions-content > div').forEach(el => el.style.display = 'none');
+                document.getElementById(`passage-container-${passageNumStr}`).style.display = 'block';
+                document.querySelectorAll(`.question-block[data-passage="${passageNumStr}"]`).forEach(q => q.style.display = 'block');
+            };
+            if (isInitialLoad) { displayContent(); } 
+            else {
+                panels.forEach(p => p.classList.add('fading'));
+                setTimeout(() => {
+                    displayContent();
+                    panels.forEach(p => p.classList.remove('fading'));
+                }, 150);
+            }
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('hidden', item.dataset.passageNum !== passageNumStr));
+            panels.forEach(p => p.scrollTop = 0);
+        };
+        
+        const handleMouseMove = (e) => {
+            if (!isResizing) return;
+            const container = resizerEl.parentElement;
+            const newLeftWidth = e.clientX - container.offsetLeft;
+            if (newLeftWidth > 200 && (container.offsetWidth - newLeftWidth) > 200) {
+                passagePanelEl.style.width = `${newLeftWidth}px`;
+                questionsPanelEl.style.flex = '1 1 0%';
+            }
+        };
+        const stopResizing = () => { isResizing = false; document.removeEventListener('mouseup', stopResizing); document.removeEventListener('mousemove', handleMouseMove); };
+        
+        const submitTest = () => {
+            clearInterval(timerInterval);
+            let score = 0;
+            questionDataMap.forEach((data, qNum) => {
+                const userAnswer = userAnswers[qNum];
+                if (userAnswer === undefined) return;
+                let isCorrect = false;
+                if (data.type === 'multiple_choice_more_answers') {
+                    const correctAnswers = new Set(data.answer);
+                    const userAnswersSet = new Set(userAnswer);
+                    isCorrect = correctAnswers.size === userAnswersSet.size && [...correctAnswers].every(val => userAnswersSet.has(val));
+                } else {
+                    isCorrect = String(userAnswer).trim().toLowerCase() === String(data.answer).toLowerCase();
+                }
+                if (isCorrect) score++;
+            });
+            modalScoreEl.textContent = `${score} / ${questionDataMap.size}`;
+            resultModalEl.classList.add('show');
+        };
+
+        const showReview = () => {
+            resultModalEl.classList.remove('show');
+            document.body.classList.add('review-mode');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('review-btn').style.display = 'block';
+            document.querySelectorAll('input, select').forEach(el => el.disabled = true);
+            document.querySelectorAll('.drag-option').forEach(el => el.draggable = false);
+            
+            document.querySelectorAll('#passage-content > div, #questions-content > div').forEach(el => el.style.display = 'block');
+            passagePanelEl.scrollTop = 0;
+            questionsPanelEl.scrollTop = 0;
+
+            questionDataMap.forEach((data, qNum) => {
+                const userAnswer = userAnswers[qNum];
+                const qContainer = document.querySelector(`[data-q-container="${qNum}"]`);
+                if (!qContainer) return;
+
+                let isCorrect = false;
+                if (data.type === 'multiple_choice_more_answers') {
+                    const correctAnswers = new Set(data.answer);
+                    const userAnswersSet = new Set(userAnswer || []);
+                    isCorrect = correctAnswers.size === userAnswersSet.size && [...correctAnswers].every(val => userAnswersSet.has(val));
+                } else {
+                    isCorrect = userAnswer !== undefined && String(userAnswer).trim().toLowerCase() === String(data.answer).toLowerCase();
+                }
+
+                const elementToMark = qContainer.querySelector(`[data-q-num="${qNum}"], input[name="q${qNum}"], select[data-q-num="${qNum}"]`) || qContainer;
+                let parent = elementToMark.closest('.mc-option, .tfn-label, .matching-item, .drop-target, li, td');
+                if (!parent) parent = elementToMark.closest('.question-item, .note-completion-block li, .drop-zone');
+                if (parent) parent.classList.add(isCorrect ? 'correct' : 'incorrect');
+
+                if (!isCorrect && userAnswer !== undefined) {
+                    const correctAnsEl = document.createElement('span');
+                    correctAnsEl.className = 'correct-answer-text';
+                    let correctAnswerText = data.answer;
+                    if (data.type === 'multiple_choice_one_answer') {
+                        correctAnswerText = data.options[data.answer];
+                    } else if (data.type === 'matching_features' || data.type === 'matching_sentence_endings' || data.type.includes('summary_completion_from_list')) {
+                        correctAnswerText = data.answer;
+                    }
+                    
+                    const displayElement = parent.querySelector('p') || parent;
+                    if (displayElement) {
+                        displayElement.appendChild(correctAnsEl);
+                         correctAnsEl.textContent = ` (Đáp án: ${correctAnswerText})`;
+                    }
+                }
+            });
+        };
+
+        const initializeListeners = () => {
+            questionsContentEl.addEventListener('input', e => { if (e.target.matches('.completion-input')) updateAnswer(e.target.dataset.qNum, e.target.value); });
+            questionsContentEl.addEventListener('change', e => {
+                const target = e.target;
+                const qNum = target.name?.replace('q', '') || target.dataset.qNum;
+                if (target.matches('input[type="radio"]')) {
+                    if (target.closest('.tfn-options')) {
+                        target.closest('.tfn-options').querySelectorAll('.tfn-label').forEach(l => l.classList.remove('selected'));
+                        target.parentElement.classList.add('selected');
+                    }
+                    updateAnswer(qNum, target.value);
+                } else if (target.matches('input[type="checkbox"]')) {
+                    const checkedBoxes = questionsContentEl.querySelectorAll(`input[name="${target.name}"]:checked`);
+                    const block = examData.questionBlocks.find(b => b.range?.startsWith(qNum));
+                    if (block && checkedBoxes.length > block.limit) {
+                        target.checked = false; return;
+                    }
+                    updateAnswer(qNum, Array.from(checkedBoxes).map(cb => parseInt(cb.value)));
+                } else if (target.matches('select')) {
+                    updateAnswer(qNum, target.value);
+                }
+            });
+            questionsContentEl.addEventListener('dragstart', e => { if (e.target.matches('.drag-option')) { dragged = e.target; setTimeout(() => e.target.classList.add('dragging'), 0); }});
+            questionsContentEl.addEventListener('dragend', e => { if (e.target.matches('.drag-option')) e.target.classList.remove('dragging'); });
+            questionsContentEl.addEventListener('dragover', e => e.preventDefault());
+            questionsContentEl.addEventListener('drop', e => {
+                e.preventDefault();
+                if (!dragged) return;
+                const dropZone = e.target.closest('.drop-target, .drag-options-area');
+                if (!dropZone) { dragged = null; return; }
+                const sourceContainer = dragged.parentElement;
+                if (sourceContainer.matches('.drop-target')) updateAnswer(sourceContainer.dataset.qNum, null);
+                if (dropZone.matches('.drop-target')) {
+                    if (dropZone.children.length > 0) dropZone.closest('.drag-drop-container').querySelector('.drag-options-area').appendChild(dropZone.firstElementChild);
+                    dropZone.appendChild(dragged);
+                    updateAnswer(dropZone.dataset.qNum, dragged.dataset.value);
+                } else if (dropZone.matches('.drag-options-area')) {
+                    dropZone.appendChild(dragged);
+                }
+                dragged = null;
+            });
+            
+            passageSelectEl.addEventListener('change', e => showPassageAndQuestions(e.target.value));
+            document.getElementById('submit-btn').addEventListener('click', () => document.getElementById('confirm-submit-modal').classList.add('show'));
+            document.getElementById('close-modal-btn').addEventListener('click', showReview);
+            document.getElementById('confirm-submit-yes').addEventListener('click', () => { document.getElementById('confirm-submit-modal').classList.remove('show'); submitTest(); });
+            document.getElementById('confirm-submit-no').addEventListener('click', () => document.getElementById('confirm-submit-modal').classList.remove('show'));
+            document.getElementById('review-btn').addEventListener('click', () => window.location.reload());
+            document.getElementById('settings-btn').addEventListener('click', e => { e.stopPropagation(); settingsDropdownEl.classList.toggle('show'); });
+            settingsDropdownEl.addEventListener('click', e => e.stopPropagation());
+            document.addEventListener('click', () => settingsDropdownEl.classList.remove('show'));
+            document.getElementById('text-size').addEventListener('change', e => { document.documentElement.style.fontSize = `${15 * parseFloat(e.target.value)}px`; });
+            document.getElementById('theme-toggle').addEventListener('change', e => { document.body.classList.toggle('dark', e.target.value === 'dark'); localStorage.setItem('ielts-theme', e.target.value); });
+            navigationPaneEl.addEventListener('click', e => {
+                const navItem = e.target.closest('.nav-item');
+                if (!navItem) return;
+                const passageNum = navItem.dataset.passageNum;
+                if (passageSelectEl.value !== passageNum) {
+                    passageSelectEl.value = passageNum;
+                    showPassageAndQuestions(passageNum);
+                }
+                setTimeout(() => {
+                    const questionEl = document.querySelector(`[data-q-container="${navItem.dataset.qNum}"]`);
+                    if (questionEl) {
+                        questionsPanelEl.scrollTop = questionEl.offsetTop - 30;
+                        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('current'));
+                        navItem.classList.add('current');
+                    }
+                }, 200);
+            });
+            resizerEl.addEventListener('mousedown', (e) => { e.preventDefault(); isResizing = true; document.addEventListener('mousemove', handleMouseMove); document.addEventListener('mouseup', stopResizing); });
+        };
+
+        const initializeExam = () => {
+            let navHtml = '';
+            examData.questionBlocks.forEach(block => {
+                const passageNum = block.passage;
+                const processItem = item => {
+                    navHtml += `<div class="nav-item" data-q-num="${item.qNum}" data-passage-num="${passageNum}">${item.qNum}</div>`;
+                    let answer = item.answer;
+                    if (block.type === 'multiple_choice_one_answer') answer = item.options[item.answer];
+                    questionDataMap.set(String(item.qNum), { ...item, answer: answer, type: block.type, options: item.options });
+                };
+
+                 const processCompletionItem = (qNum, answer) => {
+                    navHtml += `<div class="nav-item" data-q-num="${qNum}" data-passage-num="${passageNum}">${qNum}</div>`;
+                    questionDataMap.set(qNum, { answer, type: block.type });
+                };
+
+                const processMatchingItem = (item) => {
+                     navHtml += `<div class="nav-item" data-q-num="${item.qNum}" data-passage-num="${passageNum}">${item.qNum}</div>`;
+                     let answerText = block.features ? block.features[item.answer.charCodeAt(0) - 65] : item.answer;
+                     questionDataMap.set(String(item.qNum), { ...item, answer: item.answer, answerText: answerText, type: block.type });
+                };
+                
+                if (block.items) {
+                    if(block.type === 'matching_features' || block.type === 'matching_sentence_endings') {
+                        block.items.forEach(processMatchingItem);
+                    } else {
+                        block.items.forEach(processItem);
+                    }
+                } else if (block.answers) {
+                     Object.entries(block.answers).forEach(([qNum, answer]) => {
+                         let qNumKey = qNum.split('-')[0]; // Handle ranges like '7-13'
+                         navHtml += `<div class="nav-item" data-q-num="${qNumKey}" data-passage-num="${passageNum}">${qNumKey}</div>`;
+                         questionDataMap.set(qNumKey, { answer, type: block.type });
+                     });
+                 }
+            });
+            navigationPaneEl.innerHTML = navHtml;
+            passageContentEl.innerHTML = examData.passages.map(p => `<div id="passage-container-${p.id}">${p.content}</div>`).join('');
+            questionsContentEl.innerHTML = examData.questionBlocks.map(block => `<div class="question-block" data-passage="${block.passage}"><p class="question-range-title">Questions ${block.range}</p>${RENDERERS[block.type](block)}</div>`).join('');
+            
+            const savedTheme = localStorage.getItem('ielts-theme') || 'light';
+            document.body.classList.toggle('dark', savedTheme === 'dark');
+            document.getElementById('theme-toggle').value = savedTheme;
+            
+            initializeListeners();
+            showPassageAndQuestions("1", true);
+
+            let time = examData.timeLimitMinutes * 60;
+            timerInterval = setInterval(() => {
+                if (--time < 0) {
+                    clearInterval(timerInterval); 
+                    if(!document.body.classList.contains('review-mode')) submitTest();
+                    return;
+                }
+                timerEl.textContent = `${Math.floor(time/60).toString().padStart(2,'0')}:${(time%60).toString().padStart(2,'0')}`;
+            }, 1000);
+        };
+        
+        initializeExam();
+    });
+    </script>
+</body>
+</html>
